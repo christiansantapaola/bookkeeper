@@ -12,8 +12,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -21,7 +24,7 @@ import static org.junit.Assert.*;
 public class WriteCachePutTest {
 
     private WriteCache wr;
-    private static ByteBufAllocatorBuilder builder = new ByteBufAllocatorBuilderImpl();;
+    private static ByteBufAllocatorBuilder builder = new ByteBufAllocatorBuilderImpl();
     private static int maxCacheSize;
     private long ledgerId;
     private long entryId;
@@ -47,17 +50,17 @@ public class WriteCachePutTest {
                 {-1, 0, entryAllocator.buffer(), false, true},
                 {0, -1, entryAllocator.buffer(), false, true},
                 {-1, -1, entryAllocator.buffer(), false, true},
+                {Long.MAX_VALUE, Long.MAX_VALUE, entryAllocator.buffer(), true, false},
+                {Long.MIN_VALUE, Long.MIN_VALUE, entryAllocator.buffer(), false, true},
                 {0, 0, null, false, true},
-                {0, 0, entryAllocator.ioBuffer(), true, false},
-                {0, 0, entryAllocator.compositeBuffer(), true, false},
-                {0, 0, entryAllocator.directBuffer(), true, false},
-                {0, 0, entryAllocator.heapBuffer(), true, false},
+                {0, 0, entryAllocator.buffer(maxCacheSize).writeBytes("1234567890".getBytes(StandardCharsets.UTF_8)), true, false},
+                {0, 0, entryAllocator.buffer(2 * maxCacheSize).writeBytes("12345678901".getBytes(StandardCharsets.UTF_8)), false, false}
         });
     }
 
     @BeforeClass
     static public void setEnvUp() throws Exception {
-        maxCacheSize = 1024;
+        maxCacheSize = 10;
     }
 
     @Before

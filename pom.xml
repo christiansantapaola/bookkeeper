@@ -51,16 +51,20 @@
     <url>https://builds.apache.org/job/bookkeeper-master</url>
   </ciManagement>
   <modules>
+    <!--
     <module>buildtools</module>
     <module>circe-checksum</module>
     <module>bookkeeper-common</module>
     <module>bookkeeper-common-allocator</module>
     <module>stats</module>
+    -->
     <!-- TODO: move `bookkeeper-stats` and `bookkeeper-stats-providers` as submodules of `stats` -->
+    <!--
     <module>bookkeeper-stats</module>
     <module>bookkeeper-proto</module>
+    -->
     <module>bookkeeper-server</module>
-    <module>bookkeeper-benchmark</module>
+    <!--
     <module>bookkeeper-stats-providers</module>
     <module>bookkeeper-http</module>
     <module>stream</module>
@@ -70,6 +74,7 @@
     <module>bookkeeper-dist</module>
     <module>shaded</module>
     <module>microbenchmarks</module>
+    -->
   </modules>
   <mailingLists>
     <mailingList>
@@ -1018,15 +1023,9 @@
   </build>
   <profiles>
     <profile>
-      <!-- profile used by jenkins CI -->
-      <id>code-coverage</id>
+      <id>isw2</id>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.eluder.coveralls</groupId>
-            <artifactId>coveralls-maven-plugin</artifactId>
-            <version>${coveralls-maven-plugin.version}</version>
-          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
@@ -1045,93 +1044,19 @@
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.0</version>
+            <version>0.8.7</version>
             <executions>
               <execution>
                 <goals>
                   <goal>prepare-agent</goal>
                 </goals>
               </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <!-- the profiles below are only for development purpose -->
-    <profile>
-      <id>dev</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin.version}</version>
-            <configuration>
-              <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true</argLine>
-              <redirectTestOutputToFile>false</redirectTestOutputToFile>
-              <forkCount>${forkCount.variable}</forkCount>
-              <reuseForks>false</reuseForks>
-              <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
-              <trimStackTrace>false</trimStackTrace>
-              <rerunFailingTestsCount>0</rerunFailingTestsCount>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>dev-debug</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin.version}</version>
-            <configuration>
-              <argLine>-Xmx2G -Djava.net.preferIPv4Stack=true -Dbookkeeper.root.logger=DEBUG,CONSOLE</argLine>
-              <redirectTestOutputToFile>false</redirectTestOutputToFile>
-              <forkCount>${forkCount.variable}</forkCount>
-              <reuseForks>false</reuseForks>
-              <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
-              <trimStackTrace>false</trimStackTrace>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>jdk11-no-spotbugs</id>
-      <activation>
-        <jdk>[11,)</jdk>
-      </activation>
-      <build>
-        <plugins>
-           <plugin>
-             <groupId>com.github.spotbugs</groupId>
-             <artifactId>spotbugs-maven-plugin</artifactId>
-             <configuration>
-                 <skip>true</skip>
-             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>apache-release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <executions>
               <execution>
-                <id>source-release-assembly</id>
-                <configuration>
-                  <!-- we have a dedicated distribution module in bookkeeper-dist -->
-                  <skipAssembly>true</skipAssembly>
-                </configuration>
+                <id>report</id>
+                <phase>prepare-package</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
