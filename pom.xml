@@ -1023,7 +1023,7 @@
   </build>
   <profiles>
     <profile>
-      <id>isw2</id>
+      <id>isw2-coverage</id>
       <build>
         <plugins>
           <plugin>
@@ -1059,6 +1059,27 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>isw2-mutation-test</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-maven</artifactId>
+            <version>1.6.7</version>
+            <configuration>
+              <targetClasses>
+                <param>org.apache.bookkeeper.bookie.storage.ldb.ReadCache</param>
+                <param>org.apache.bookkeeper.bookie.storage.ldb.WriteCache</param>
+              </targetClasses>
+              <targetTests>
+                <param>org.apache.bookkeeper.bookie.storage.ldb.*</param>
+              </targetTests>
+            </configuration>
           </plugin>
         </plugins>
       </build>

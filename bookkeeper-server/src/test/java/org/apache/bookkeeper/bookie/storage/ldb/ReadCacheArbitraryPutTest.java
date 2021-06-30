@@ -53,7 +53,7 @@ public class ReadCacheArbitraryPutTest {
                 // {int maxSegmentSize, long maxCacheSize, int ledgerId, int noEntry, int len boolean expectedException}
                 {64, 64 * 10, 0, 10, 64, false},
                 {64, 128, 0, 3, 64, false},
-                {64, 128, 0, 10, 64, false}
+                {64, 128, 0, 10, 60, false}
 
         });
     }
@@ -74,6 +74,7 @@ public class ReadCacheArbitraryPutTest {
             for (int i = 0; i < 2 * noEntry; i++) {
                 rd.put(ledgerId, i, getByteBufOfLen(len));
             }
+            assertNotNull(rd.get(ledgerId, 2 * noEntry - 1));
         } catch (Exception e) {
             System.err.println(e.getMessage());
             assertTrue(expectedException);
