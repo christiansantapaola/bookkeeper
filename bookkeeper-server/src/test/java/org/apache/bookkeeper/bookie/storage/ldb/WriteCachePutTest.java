@@ -1,22 +1,16 @@
 package org.apache.bookkeeper.bookie.storage.ldb;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import org.apache.bookkeeper.common.allocator.ByteBufAllocatorBuilder;
 import org.apache.bookkeeper.common.allocator.impl.ByteBufAllocatorBuilderImpl;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +19,8 @@ public class WriteCachePutTest {
 
     private WriteCache wr;
     private static ByteBufAllocatorBuilder builder = new ByteBufAllocatorBuilderImpl();
-    private static int maxCacheSize;
+    private static int maxSegmentsSize = 64;
+    private static int maxCacheSize = 128;
     private long ledgerId;
     private long entryId;
     private ByteBuf entry;
@@ -40,32 +35,39 @@ public class WriteCachePutTest {
         this.expectedException = expectedException;
     }
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> testingSet() {
-        ByteBufAllocator entryAllocator = builder.build();
-        return Arrays.asList(new Object[][] {
-                {1, 0, entryAllocator.buffer(), true, false},
-                {0, 1, entryAllocator.buffer(), true, false},
-                {1, 1, entryAllocator.buffer(), true, false},
-                {-1, 0, entryAllocator.buffer(), false, true},
-                {0, -1, entryAllocator.buffer(), false, true},
-                {-1, -1, entryAllocator.buffer(), false, true},
-                {Long.MAX_VALUE, Long.MAX_VALUE, entryAllocator.buffer(), true, false},
-                {Long.MIN_VALUE, Long.MIN_VALUE, entryAllocator.buffer(), false, true},
-                {0, 0, null, false, true},
-                {0, 0, entryAllocator.buffer(maxCacheSize).writeBytes("1234567890".getBytes(StandardCharsets.UTF_8)), true, false},
-                {0, 0, entryAllocator.buffer(2 * maxCacheSize).writeBytes("12345678901".getBytes(StandardCharsets.UTF_8)), false, false}
-        });
+    private static ByteBuf getByteBufOfLen(int len) {
+        ByteBuf byteBuf = builder.build().heapBuffer(len);
+        for (int i = 0; i < len; i++) {
+            byteBuf.writeByte(1);
+        }
+        return byteBuf;
     }
 
-    @BeforeClass
-    static public void setEnvUp() throws Exception {
-        maxCacheSize = 10;
+
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> testingSet() {
+        return Arrays.asList(new Object[][] {
+                // happy path
+                {0, 0, getByteBufOfLen(maxSegmentsSize), true, false},
+                // ledgerId < 0, expected exception.
+                {-1, 0, getByteBufOfLen(maxSegmentsSize), false, true},
+                // entryId < 0, expected exception.
+                {0, -1, getByteBufOfLen(maxSegmentsSize), false, true},
+                // ledgerId and entryId as MAX_VALUE, see if increment create problem, expected to succeed.
+                {Long.MAX_VALUE, Long.MAX_VALUE, getByteBufOfLen(maxSegmentsSize), true, false},
+                // ledgerId and entryId as MIN_VALUE, see if decrement create problem, expected to succeed.
+                {Long.MIN_VALUE, Long.MIN_VALUE, getByteBufOfLen(maxSegmentsSize), false, true},
+                // entry is null, expected to fail with exception.
+                {0, 0, null, false, true},
+                // entry with size bigger than maxSegmentSize, expected to fail.
+                {0, 0, getByteBufOfLen(maxSegmentsSize + 1), false, false},
+        });
     }
 
     @Before
     public void setUp() throws Exception {
-        wr =  new WriteCache(builder.build(), maxCacheSize);
+        wr =  new WriteCache(builder.build(), maxCacheSize, maxSegmentsSize);
     }
 
     @After
@@ -77,9 +79,14 @@ public class WriteCachePutTest {
     @Test
     public void put() {
         try {
+            assertTrue(wr.isEmpty());
             boolean result = wr.put(ledgerId, entryId, entry);
-            assertEquals(result, expectedResult);
-            assertFalse(expectedException);
+            assertEquals(expectedResult, result);
+            if (result) {
+                assertFalse(wr.isEmpty());
+                assertEquals(1, wr.count());
+                assertEquals(entry.readableBytes(), wr.size());
+            }
         } catch (NullPointerException | IllegalArgumentException e) {
             assertTrue(expectedException);
         }
