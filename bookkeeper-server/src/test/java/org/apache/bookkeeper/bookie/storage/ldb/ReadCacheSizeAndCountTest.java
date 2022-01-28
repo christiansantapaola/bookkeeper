@@ -5,7 +5,6 @@ import org.apache.bookkeeper.common.allocator.ByteBufAllocatorBuilder;
 import org.apache.bookkeeper.common.allocator.impl.ByteBufAllocatorBuilderImpl;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -16,27 +15,34 @@ import java.util.Collection;
 import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
-public class ReadCacheArbitraryPutTest {
+public class ReadCacheSizeAndCountTest {
     private int maxSegmentSize;
     private long maxCacheSize;
-    private int segmentsCount;
-    private int segmentSize;
+    private int entrySize;
+    private int numPut;
+    private int expectedSize;
+    private int expectedCount;
+    private boolean expectedException;
     private static ByteBufAllocatorBuilder builder;
     private ReadCache rd;
-    private int ledgerId;
-    private int noEntry;
-    private int len;
-    private boolean expectedException;
 
-    public ReadCacheArbitraryPutTest(int maxSegmentSize, long maxCacheSize,
-                                     int ledgerId, int noEntry, int len, boolean expectedException) {
+    public ReadCacheSizeAndCountTest(int maxSegmentSize,
+                                     long maxCacheSize,
+                                     int entrySize,
+                                     int numPut,
+                                     int expectedSize,
+                                     int expectedCount,
+                                     boolean expectedException) {
         this.maxSegmentSize = maxSegmentSize;
         this.maxCacheSize = maxCacheSize;
-        this.ledgerId = ledgerId;
-        this.noEntry = noEntry;
-        this.len = len;
+        this.entrySize = entrySize;
+        this.numPut = numPut;
+        this.expectedSize = expectedSize;
+        this.expectedCount = expectedCount;
         this.expectedException = expectedException;
     }
+
+
 
     private static ByteBuf getByteBufOfLen(int len) {
         ByteBuf byteBuf = builder.build().heapBuffer(len);
@@ -47,14 +53,17 @@ public class ReadCacheArbitraryPutTest {
     }
 
 
+    /*
+    * int maxSegmentSize, long maxCacheSize, int entrySize, int numPut, int expectedSize, int expectedCount, boolean expectedException
+    */
+
     @Parameterized.Parameters
     public static Collection<Object[]> testingSet() {
         return Arrays.asList(new Object[][] {
-                // {int maxSegmentSize, long maxCacheSize, int ledgerId, int noEntry, int len boolean expectedException}
-                {64, 64 * 10, 0, 10, 64, false},
-                {64, 128, 0, 3, 64, false},
-                {64, 128, 0, 10, 60, false}
-
+                {64, 64 * 2, 64, 2, 64 * 2, 2, false},
+                {64, 64 * 2, 32, 4, 64 * 2, 2, false},
+                {64, 64 * 2, 64, 10, 64 * 2, 2, false},
+                {64, 64 * 2, 0, 2, 0, 2, false},
         });
     }
 
@@ -62,19 +71,20 @@ public class ReadCacheArbitraryPutTest {
     @Before
     public void setUp() throws Exception {
         builder = new ByteBufAllocatorBuilderImpl();
-        segmentsCount = Math.max(2, (int) (maxCacheSize / maxSegmentSize));
-        segmentSize = (int) (maxCacheSize / segmentsCount);
         rd = new ReadCache(builder.build(), maxCacheSize, maxSegmentSize);
     }
 
     @Test
-    public void put() {
+    public void test() {
         try {
-            int len = (int) (noEntry > 0 ? Math.min(maxCacheSize / noEntry, segmentSize) : segmentSize);
-            for (int i = 0; i < 2 * noEntry; i++) {
-                rd.put(ledgerId, i, getByteBufOfLen(len));
+            assertTrue(entrySize <= maxSegmentSize);
+            assertTrue(maxSegmentSize <= maxCacheSize);
+            for (int i = 0; i < numPut; i++) {
+                ByteBuf buf = getByteBufOfLen(entrySize);
+                rd.put(0, i, buf);
             }
-            assertNotNull(rd.get(ledgerId, 2 * noEntry - 1));
+            assertEquals(expectedCount, rd.count());
+            assertEquals(expectedSize, rd.size());
         } catch (Exception e) {
             System.err.println(e.getMessage());
             assertTrue(expectedException);

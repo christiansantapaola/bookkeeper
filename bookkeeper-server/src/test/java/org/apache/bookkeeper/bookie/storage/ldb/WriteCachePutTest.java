@@ -60,6 +60,8 @@ public class WriteCachePutTest {
                 {Long.MIN_VALUE, Long.MIN_VALUE, getByteBufOfLen(maxSegmentsSize), false, true},
                 // entry is null, expected to fail with exception.
                 {0, 0, null, false, true},
+                // empty buffer
+                {0, 0, getByteBufOfLen(0), true, false},
                 // entry with size bigger than maxSegmentSize, expected to fail.
                 {0, 0, getByteBufOfLen(maxSegmentsSize + 1), false, false},
         });
@@ -70,20 +72,16 @@ public class WriteCachePutTest {
         wr =  new WriteCache(builder.build(), maxCacheSize, maxSegmentsSize);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        wr.clear();
-        wr.close();
-    }
-
     @Test
     public void put() {
         try {
             assertTrue(wr.isEmpty());
+            assertEquals(0, wr.count());
+            assertEquals(0, wr.size());
             boolean result = wr.put(ledgerId, entryId, entry);
             assertEquals(expectedResult, result);
-            if (result) {
-                assertFalse(wr.isEmpty());
+            if (expectedResult) {
+                assertEquals(entry.readableBytes(), wr.size());
                 assertEquals(1, wr.count());
                 assertEquals(entry.readableBytes(), wr.size());
             }
@@ -91,4 +89,12 @@ public class WriteCachePutTest {
             assertTrue(expectedException);
         }
     }
+
+    @After
+    public void tearDown() throws Exception {
+        wr.clear();
+        wr.close();
+    }
+
+
 }

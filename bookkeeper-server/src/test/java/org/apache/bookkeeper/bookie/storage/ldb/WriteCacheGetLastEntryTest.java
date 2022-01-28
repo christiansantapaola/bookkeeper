@@ -55,6 +55,7 @@ public class WriteCacheGetLastEntryTest {
                 {1, true, false},
                 // 2 insert expected to succeed
                 {2, true, false},
+                {3, true, false},
         });
     }
 

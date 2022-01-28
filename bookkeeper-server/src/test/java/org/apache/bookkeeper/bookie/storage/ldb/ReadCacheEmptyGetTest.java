@@ -13,11 +13,10 @@ import org.junit.runners.Parameterized;
 import java.util.Arrays;
 import java.util.Collection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(Parameterized.class)
-public class ReadCacheGetTest {
+public class ReadCacheEmptyGetTest {
     private ReadCache rd;
     private static int maxSegmentSize;
     private static long maxCacheSize;
@@ -42,11 +41,9 @@ public class ReadCacheGetTest {
         maxCacheSize = 64 * 10;
     }
 
-    public ReadCacheGetTest(long ledgerId, long entryId, ByteBuf entry, boolean expectedException) {
+    public ReadCacheEmptyGetTest(long ledgerId, long entryId) {
         this.ledgerId = ledgerId;
         this.entryId = entryId;
-        this.entry = entry;
-        this.expectedException = expectedException;
     }
 
 
@@ -56,8 +53,7 @@ public class ReadCacheGetTest {
         setEnv();
         return Arrays.asList(new Object[][] {
                 // happy path
-                {0, 0, getByteBufOfLen(maxSegmentSize), false},
-                {0, 0, getByteBufOfLen(0), false},
+                {0, 0},
         });
     }
 
@@ -66,17 +62,15 @@ public class ReadCacheGetTest {
     public void setUp() throws Exception {
         ByteBufAllocatorBuilder builder = new ByteBufAllocatorBuilderImpl();
         this.rd = new ReadCache(builder.build(), maxCacheSize, maxSegmentSize);
-        this.rd.put(this.ledgerId, this.entryId, this.entry);
     }
 
     @Test
     public void put() {
         try {
-        ByteBuf out = rd.get(this.ledgerId, this.entryId);
-        assertEquals(this.entry, out);
+            ByteBuf out = rd.get(this.ledgerId, this.entryId);
+            assertNull(out);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            assertTrue(expectedException);
         }
     }
 
