@@ -803,6 +803,11 @@
       <artifactId>powermock-module-junit4</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.7</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -815,6 +820,11 @@
     </extensions>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.7</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
@@ -1021,6 +1031,7 @@
       </plugin>
     </plugins>
   </build>
+
   <profiles>
     <profile>
       <id>isw2-coverage</id>
