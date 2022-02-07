@@ -1,7 +1,14 @@
 language: java
 
-  addons:
-    sonarcloud:
-      organization: "christiansantapaola" # the key of the org you chose at step #3
-      token:
-        secure: "f147c24c97b8da2107c0ff0e228477943ac0fb9c" # encrypted value of your token
+notifications:
+  email: false
+
+addons:
+  sonarcloud:
+    organization: "qrowsxi"
+    token:
+      secure: "geGKaJTu4Chfi0Hx9HUXMR7kvoqrQdvfhrLtuF7swK8yois4KjNGwthrAUWKiLDtK4N0jTxOEzSAZQYtSnPef+ZxUuONOAZ3uAGJCcXCOZ77puSHDQcdkqNDl7E99Zxf7qHksVyCinj6e/ml7tcmPNWLH6jzCrxrQ5W15fQTD2oGwAJkMceUbB2buRVj3PeVV302VSKLpfWBKhhKUfxkJ6P12I4Toz26A4m/mxmbvYAcwbXM+g0NfSQhlTKhRctySyoglaPaFAeTYKYw1Ef1cFmayE5uukqal5tFqPDlXkQ5vDnKZS8O4YckMihQ5zN1w+UIRmms7+LtyMJ4k0qb3nWyX4M3rVeD62LXApmKR2IXayufCopIDY6n8r+u6OtyvPacLJeBwj0z9HYhqLMK1VSGHes6gW+P7El1U/meQ5mZRq8WK6uMzbqII8Euvw/Yn5C0pP9vwVgKRcdZS9haWS2Bz51n0LLDJb1TrKNopWGP+6VyUhTfv5RWY/3yxzEMQ+XAuc4BmDrRv05RBtQ+s0KaMobBeCbX1Kx8znpO1/CPeRj8yTdI/zqncwWi56IIr+KozcppwWdkdkDoazqvMMdrVcuid6bZfNeEn5K1D7lmkFKlt0PresnIbKGTTxja5wqkXtrJciXHPgHJchPt/6QT+uHT6gLEI0hiKPqX38c="
+
+script:
+  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=christiansantapaola_bookkeeper
