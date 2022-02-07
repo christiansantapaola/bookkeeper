@@ -1,0 +1,7 @@
+language: java
+
+  addons:
+    sonarcloud:
+      organization: "christiansantapaola" # the key of the org you chose at step #3
+      token:
+        secure: "f147c24c97b8da2107c0ff0e228477943ac0fb9c" # encrypted value of your token
